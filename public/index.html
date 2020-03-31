@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script
+        src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js" type="text/javascript"></script>
+<body>
+    <canvas id="myChart" width="1200" height="1200"></canvas>
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+
+        var myChart;
+        var data = {},
+            processedData = {};
+        var labels = [];
+
+        //using jQuery ajax method get data from the external file. ( while using react you will do it differently)
+        var jsonData = $.ajax({
+            url: 'json/stats.json',
+            dataType: 'json',
+        }).done(function(results) {
+            //get values that only needed
+            processedData = processData(results);
+
+            console.log(processedData);
+
+            data = {
+                labels: processedData.labels,
+                datasets: [
+                    {
+                        label: "Deaths",
+                        data: processedData.deaths,
+                        borderColor: 'rgba(255, 0, 0,1)',
+                        backgroundColor: 'rgba(255, 0, 0, 0.5)'
+                    },
+                    {
+                        label: "Recovered",
+                        data: processedData.recovered,
+                        borderColor: 'rgba(0, 255, 0,1)',
+                        backgroundColor: 'rgba(0, 255, 0, 0.5)'
+                    },
+                    {
+                        label: "Active",
+                        data: processedData.active,
+                        borderColor: 'rgba(255, 0, 255,1)',
+                        backgroundColor: 'rgba(255, 0, 255, 0.5)'
+                    },
+                    {
+                        label: "Cases",
+                        data: processedData.cases,
+                        borderColor: 'rgba(255, 255, 0,1)',
+                        backgroundColor: 'rgba(255, 255, 0, 0.5)'
+                    }
+                ]
+            };
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    "responsive": false,
+                    "scales": {
+                        "yAxes": [{
+                            "ticks": {
+                                "beginAtZero": true
+                            }
+                        }]
+                    }
+                }
+            });
+        });
+
+        var processData = function(jsonData) {
+            var casesDataset = [];
+            var deathsDataset = [];
+            var recoveredDataset = [];
+            var activeCasesDataset = [];
+            var timeDataset = [];
+
+            console.log(jsonData);
+
+            jQuery.each(jsonData.timeline.cases, function(index, item) {
+                if (item > 50) {
+                    casesDataset.push(item);
+                    timeDataset.push(index);
+                }
+            });
+
+            jQuery.each(jsonData.timeline.recovered, function(index, item) {
+                if (timeDataset.indexOf(index) > -1) {
+                    recoveredDataset.push(item);
+                }
+            });
+
+            jQuery.each(jsonData.timeline.deaths, function(index, item) {
+                if (timeDataset.indexOf(index) > -1) {
+                    deathsDataset.push(item);
+                }
+
+            });
+
+            jQuery.each(timeDataset, function(index, item) {
+                var deaths = jsonData.timeline.deaths[item]
+                var recovered = jsonData.timeline.recovered[item]
+                var cases = jsonData.timeline.cases[item]
+
+                var activeCases = cases - recovered - deaths;
+
+                activeCasesDataset.push(activeCases);
+            });
+
+            return {
+                labels: timeDataset,
+                cases: casesDataset,
+                recovered: recoveredDataset,
+                deaths: deathsDataset,
+                active: activeCasesDataset
+            };
+        }
+    </script>
+</body>

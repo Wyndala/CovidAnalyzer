@@ -1,0 +1,16 @@
+# Access protection
+#Order deny,allow
+#Deny from all
+
+#AuthName "Mountopia"
+#AuthType Basic
+#AuthUserFile /var/www/html/.htusers
+#Require valid-user
+#Satisfy any
+
+# Configuration of redirects
+RewriteEngine on
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php [NC,L,QSA]
